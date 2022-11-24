@@ -19,3 +19,8 @@ def enum_type(*sequential, **named) -> type:
     print(sequential, ": ", named)
     enums = dict(zip(sequential, range(len(sequential))), **named)
     return type('Enum', (), enums)
+
+class ResponseCode:
+    OK = 200,
+    ERROR_THRESHOLD = 400,
+    ERROR = 500

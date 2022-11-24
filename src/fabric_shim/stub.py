@@ -9,11 +9,11 @@ VALIDATION_PARAMETER: str = 'VALIDATION_PARAMETER'
 class ChaincodeStub(ChaincodeStubInterface):
     """The stub encapsulates the APIs between the chaincode implementation and the Fabric peer"""
 
-    def __init__(self, client, channel_id, txid, chaincode_event, signed_proposal_pb):
+    def __init__(self, client, channel_id, txid, input, signed_proposal_pb):
         self.client = client
         self.channel_id = channel_id
         self.txid = txid
-        self.chaincode_event = chaincode_event
+        self.input = input
         self.signed_proposal_pb = signed_proposal_pb
         self.validationParameterMetakey = VALIDATION_PARAMETER
 
@@ -22,4 +22,22 @@ class ChaincodeStub(ChaincodeStubInterface):
             pass
 
     def get_state(self, key: str) -> bytearray:
+        pass
+
+    def get_function_and_parameters(self):  # Get the chaincode calling method name and parameter list
+        pass
+
+    def get_txid(self):  # Get the ID of the chaincode calling transaction
+        pass
+
+    def get_channel_id(self):  # Get the channel ID of the chaincode calling transaction
+        pass
+
+    def get_creator(self):  # Get the user ID of the chaincode calling transaction
+        pass
+
+    def get_transient(self):  # Get the transient dataset of chaincode call transactions
+        pass
+
+    def get_tx_timestamp(self):  # Get the timestamp of the chaincode calling transaction
         pass
