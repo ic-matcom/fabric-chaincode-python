@@ -10,7 +10,7 @@ from typing import AsyncIterable, Iterable
 import grpc
 import queue
 
-from src.fabric_shim.handler import chat_with_peer, handle_message
+from src.fabric_shim.handler import Handler
 from src.fabric_shim.interfaces import Chaincode
 from src.fabric_shim.logging import LOGGER
 from fabric_protos_python.peer import chaincode_shim_pb2_grpc as ccshim_grpc_pb2
@@ -34,7 +34,8 @@ class ChaincodeService(ccshim_grpc_pb2.ChaincodeServicer):
     async def Connect(self, request_iterator: AsyncIterable[ccshim_pb2.ChaincodeMessage],
                     context: grpc.aio.ServicerContext) -> None: # Iterable[ccshim_pb2.ChaincodeMessage]:
         try:
-            await chat_with_peer(self._ccid, self._cc, request_iterator, context)
+            handler = Handler(self._ccid, self._cc)
+            await handler.chat_with_peer(request_iterator, context)
         except asyncio.CancelledError:
             LOGGER.info("Cancelling RPC due to exhausted resources.")
             # context.abort()
@@ -56,13 +57,13 @@ def _internal_server(**kwargs) -> grpc.aio.Server:
     server = grpc.aio.server()
 
     key = kwargs.pop("key", os.getenv('CORE_TLS_CLIENT_KEY_PATH'))
-    cert = kwargs.pop("cert", os.getenv('CORE_PEER_TLS_ROOTCERT_FILE'))
+    cert = kwargs.pop("cert", os.getenv('CORE_TLS_CLIENT_CERT_PATH'))
     address = kwargs.pop("address", os.getenv('CHAINCODE_SERVER_ADDRESS'))
 
     if not key or not cert:
         port = server.add_insecure_port(address)
     else:
-        client_ca_certs = kwargs.pop("client_ca_certs", os.getenv('CORE_TLS_CLIENT_CERT_PATH'))
+        client_ca_certs = kwargs.pop("client_ca_certs", os.getenv('CORE_PEER_TLS_ROOTCERT_FILE'))
         server_credentials = load_tls_config(key, cert, client_ca_certs)
         # Pass down credentials
         port = server.add_secure_port(address, server_credentials)
