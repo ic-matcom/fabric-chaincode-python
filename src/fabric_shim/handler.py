@@ -206,3 +206,45 @@ class Handler:
                 LOGGER.info(f'->>>>  payload  {receive_message.payload}')
                 LOGGER.info(f'->>>>  channel ID  {receive_message.channel_id}')
                 LOGGER.info(f'->>>>  Tx ID  {receive_message.txid}')
+
+    async def handle_get_state(self, collection, key, channel_id, tx_id):
+        msg_pb = cc_pb2.GetState()
+        msg_pb.setKey(key)
+        msg_pb.setCollection(collection)
+        msg = ccshim_pb2.ChaincodeMessage(
+            type = ccshim_pb2.ChaincodeMessage.GET_STATE,
+            payload = msg_pb.serializeBinary(),
+            txid = tx_id,
+            channel_id = channel_id
+        )
+        print('handle_get_state - with key:' + key)
+        return await self.__ask_peer_and_listen(msg, 'GetState')
+    
+    async def handle_put_state(self, collection, key, value, channel_id, tx_id):
+        msg_pb = cc_pb2.PutState()
+        msg_pb.setKey(key)
+        msg_pb.setValue(value)
+        msg_pb.setCollection(collection)
+        msg = ccshim_pb2.ChaincodeMessage(
+            type = ccshim_pb2.ChaincodeMessage.PUT_STATE,
+            payload = msg_pb.serializeBinary(),
+            txid = tx_id,
+            channel_id = channel_id
+        )
+        return await self.__ask_peer_and_listen(msg, 'PutState')
+
+    async def handle_delete_state(self, collection, key, channel_id, tx_id):
+        msg_pb = cc_pb2.DelState()
+        msg_pb.setKey(key)
+        msg_pb.setCollection(collection)
+        msg = ccshim_pb2.ChaincodeMessage(
+            type = ccshim_pb2.ChaincodeMessage.DEL_STATE,
+            payload = msg_pb.serializeBinary(),
+            txid = tx_id,
+            channel_id = channel_id
+        )
+        return await self.__ask_peer_and_listen(msg, 'DeleteState')
+    
+    # TODO fill concurrent communication with peer
+    def __ask_peer_and_listen(self, msg, action):
+        pass
