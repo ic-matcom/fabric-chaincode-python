@@ -27,9 +27,7 @@ class ResponseCode:
     ERROR = 500
 
 MIN_UNICODE_RUNE_VALUE = '\u0000'
-MAX_UNICODE_RUNE_VALUE = '\u{10ffff}'
 COMPOSITEKEY_NS = '\x00'
-EMPTY_KEY_SUBSTITUTE = '\x01'
 
 def validate_composite_key_attribute(attr):
     if attr is None or not isinstance(attr, str) or len(attr) == 0:

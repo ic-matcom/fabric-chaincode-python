@@ -2,7 +2,6 @@
 # contributors. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 from src.fabric_shim.interfaces import ChaincodeStubInterface
-from src.fabric_shim.handler import Handler
 from src.fabric_shim.utils import *
 from fabric_protos_python.peer import chaincode_pb2 as pb
 from fabric_protos_python.common import common_pb2 as cm_pb
@@ -17,7 +16,7 @@ class ChaincodeStub(ChaincodeStubInterface):
     """The stub encapsulates the APIs between the chaincode implementation and the Fabric peer"""
 
     def __init__(self, client, channel_id, txid, input, signed_proposal_pb):
-        self.client: Handler = client
+        self.client = client
         self.channel_id = channel_id
         self.txid = txid
         self.input = input
