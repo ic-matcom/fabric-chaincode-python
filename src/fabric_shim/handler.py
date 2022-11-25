@@ -249,12 +249,11 @@ class Handler:
         )
         return await self.__ask_peer_and_listen(msg, 'DeleteState')
     
-    def __ask_peer_and_listen(self, msg, action):
+    async def __ask_peer_and_listen(self, msg, action):
         loop = asyncio.get_running_loop()
         fut = loop.create_future()
 
         message = QueueMessage(msg, action, fut)
         self.msg_queue_handler.queue_msg(message)
 
-        # TODO: fix
-        return (await fut)
+        return await fut
