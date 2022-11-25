@@ -11,6 +11,7 @@
 #      chat_with_peer(): Starts a two-way communication flow with the peer node
 
 import datetime
+import asyncio
 from typing import AsyncIterable
 
 import grpc
@@ -21,6 +22,7 @@ from src.fabric_shim.logging import LOGGER
 from src.fabric_shim.response import new_error_msg
 from src.fabric_shim.utils import ResponseCode
 from src.fabric_shim.stub import ChaincodeStub
+from src.fabric_shim.msg_queue_handler import MsgQueueHandler, QueueMessage
 from fabric_protos_python.peer import chaincode_shim_pb2 as ccshim_pb2
 from fabric_protos_python.peer import chaincode_pb2 as cc_pb2
 
@@ -184,6 +186,8 @@ class Handler:
         global STATE
         STATE = STATES.CREATED
 
+        self.msg_queue_handler = MsgQueueHandler(self, context)
+
         # Send the ChaincodeID during register.
         cm = ccshim_pb2.ChaincodeMessage(type=ccshim_pb2.ChaincodeMessage.REGISTER,
                                         payload=self.chaincode_id.SerializeToString())
@@ -245,6 +249,12 @@ class Handler:
         )
         return await self.__ask_peer_and_listen(msg, 'DeleteState')
     
-    # TODO fill concurrent communication with peer
     def __ask_peer_and_listen(self, msg, action):
-        pass
+        loop = asyncio.get_running_loop()
+        fut = loop.create_future()
+
+        message = QueueMessage(msg, action, fut)
+        self.msg_queue_handler.queue_msg(message)
+
+        # TODO: fix
+        return (await fut)
