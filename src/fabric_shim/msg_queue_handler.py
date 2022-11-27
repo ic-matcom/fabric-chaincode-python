@@ -1,5 +1,6 @@
 import asyncio
-from src.fabric_shim.utils import *
+import json
+
 
 class QueueMessage:
     def __init__(self, msg, method, future: asyncio.Future) -> None:
@@ -11,7 +12,7 @@ class QueueMessage:
         return self.msg
 
     def get_msg_txContextId(self):
-        return self.msg.getChannelId() + self.msg.getTxid()
+        return self.msg.channel_id + self.msg.txid
 
     def get_method(self):
         return self.method
@@ -22,15 +23,16 @@ class QueueMessage:
     def fail(self, err):
         self.future.set_exception(Exception(err))
 
+
 class MsgQueueHandler:
     """This class handles queuing messages to be sent to the peer based on transaction id"""
     
-    def __init__(self, handler, context) -> None:
+    def __init__(self, handler) -> None:
         self.handler = handler
         self.tx_queues = {}
-        self.context = context
+        self.context = handler.context
 
-    def queue_msg(self, msg: QueueMessage):
+    async def queue_msg(self, msg: QueueMessage):
         """Queue a message to be sent to the peer"""
         tx_context_id = msg.get_msg_txContextId()
         try:
@@ -41,30 +43,30 @@ class MsgQueueHandler:
         msg_queue = self.tx_queues[tx_context_id]
         msg_queue.append(msg)
         if len(msg_queue) == 1:
-            self.__send_msg(tx_context_id)
+            await self.__send_msg(tx_context_id)
 
-    def __send_msg(self, tx_context_id):
+    async def __send_msg(self, tx_context_id):
         """send the current message to the peer"""
-        msg: QueueMessage = self.__getCurrentMsg(tx_context_id)
+        msg: QueueMessage = self.__get_current_msg(tx_context_id)
         if msg:
             try:
-                self.context.write(msg.get_msg())
+                await self.context.write(msg.get_msg())
             except Exception as e:
                 msg.fail(e)
 
-    def handle_msg_response(self, response):
-        tx_id = response.tx_id
+    async def handle_msg_response(self, response):
+        tx_id = response.txid
         channel_id = response.channel_id
         tx_context_id = channel_id + tx_id
         msg: QueueMessage = self.__get_current_msg(tx_context_id)
 
         if msg:
             try:
-                parsed_response = parse_response(self.handler, response, msg.get_method())
-                msg.success(parsed_response)
+                # parsed_response = parse_response(self.handler, response, msg.get_method())
+                msg.success(response)
             except Exception as e:
                 msg.fail(e)
-            self.__remove_current_and_send_next(tx_context_id)
+            await self.__remove_current_and_send_next(tx_context_id)
 
     def __get_current_msg(self, tx_context_id):
         """returns the message at the top of the queue for the particular transaction"""
@@ -74,11 +76,11 @@ class MsgQueueHandler:
         
         print('Failed to find a message for transaction context id %s' % tx_context_id)
 
-    def __remove_current_and_send_next(self, tx_context_id):
+    async def __remove_current_and_send_next(self, tx_context_id):
         """Remove the current message and send the next message in the queue if there is one"""
         msg_queue = self.tx_queues[tx_context_id]
-        if msg_queue and msg_queue.length > 0:
+        if msg_queue and len(msg_queue) > 0:
             msg_queue.pop(0)
             if len(msg_queue) != 0:
-                self.__send_msg(tx_context_id)
+                await self.__send_msg(tx_context_id)
                 
