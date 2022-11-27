@@ -6,78 +6,73 @@ from src.fabric_shim.utils import *
 from fabric_protos_python.peer import chaincode_pb2 as pb
 from fabric_protos_python.common import common_pb2 as cm_pb
 from fabric_protos_python.peer import proposal_pb2 as pr_pb
-from fabric_protos_python import msp
+from fabric_protos_python.msp import identities_pb2 as id_pb
 from fabric_protos_python.peer import chaincode_event_pb2 as e_pb
 from collections.abc import Sequence
+from src.fabric_shim.logging import LOGGER
 
 VALIDATION_PARAMETER: str = 'VALIDATION_PARAMETER'
+
 
 class ChaincodeStub(ChaincodeStubInterface):
     """The stub encapsulates the APIs between the chaincode implementation and the Fabric peer"""
 
-    def __init__(self, client, channel_id, txid, input, signed_proposal_pb):
+    def __init__(self, client, channel_id, txid, cc_input, signed_proposal_pb):
         self.client = client
         self.channel_id = channel_id
         self.txid = txid
-        self.input = input
+        self.cc_input = cc_input
         self.signed_proposal_pb = signed_proposal_pb
         self.validationParameterMetakey = VALIDATION_PARAMETER
 
-        # signed_proposal_pb is a legitimate one, meaning it is an internal call to system chaincodes.
-        if self.signed_proposal:
+        if self.signed_proposal_pb:
             decoded_sp = {
-                'signature': self.signed_proposal.getSignature()
+                'signature': self.signed_proposal_pb.signature
             }
+            proposal = pr_pb.Proposal.FromString(self.signed_proposal_pb.proposal_bytes)
+            decoded_sp['proposal'] = {}
+            self.proposal = proposal
 
-            try:
-                proposal = pb.Proposal.deserializeBinary(self.signed_proposal.getProposalBytes())
-                decoded_sp['proposal'] = {}
-                self.proposal = proposal
-            except Exception as e:
-                raise Exception('Failed extracting proposal from signedProposal. ' + e)
-
-            proposal_header = proposal.getHeader_asU8()
-            if not proposal_header or len(proposal_header) == 0:
+            if not proposal.header or len(proposal.header) == 0:
                 raise Exception('Proposal header is empty')
-            
 
-            proposal_payload = proposal.getPayload_asU8()
-            if not proposal_payload or len(proposal_payload) == 0:
+            if not proposal.payload or len(proposal.payload) == 0:
                 raise Exception('Proposal payload is empty')
 
             try:
-                header = cm_pb.Header.deserializeBinary(proposal_header)
+                header = cm_pb.Header.FromString(proposal.header)
                 decoded_sp['proposal']['header'] = {}
             except Exception as e:
-                raise Exception('Could not extract the header from the proposal: ' + e)
+                raise Exception('Could not extract the header from the proposal: ' + str(e))
 
             try:
-                signature_header = cm_pb.SignatureHeader.deserializeBinary(header.getSignatureHeader())
-                decoded_sp['proposal']['header']['signatureHeader'] = {'nonce': signature_header.getNonce_asU8(), 'creator_u8': signature_header.getCreator_asU8()}
+                signature_header = cm_pb.SignatureHeader.FromString(header.signature_header)
+                decoded_sp['proposal']['header']['signatureHeader'] = \
+                    {'nonce': signature_header.nonce, 'creator_u8': signature_header.creator}
             except Exception as e:
-                raise Exception('Decoding SignatureHeader failed: ' + e)
+                raise Exception('Decoding SignatureHeader failed: ' + str(e))
 
             try:
-                creator = msp.SerializedIdentity.deserializeBinary(signature_header.getCreator_asU8())
+                creator = id_pb.SerializedIdentity.FromString(signature_header.creator)
                 decoded_sp['proposal']['header']['signatureHeader']['creator'] = creator
-                self.creator = {'mspid': creator.getMspid(), 'idBytes': creator.getIdBytes_asU8()}
+                self.creator = {'mspid': creator.mspid, 'idBytes': creator.id_bytes}
             except Exception as e:
-                raise Exception('Decoding SerializedIdentity failed: ' + e)
+                raise Exception('Decoding SerializedIdentity failed: ' + str(e))
 
             try:
-                channel_header = cm_pb.ChannelHeader.deserializeBinary(header.getChannelHeader_asU8())
+                channel_header = cm_pb.ChannelHeader.FromString(header.channel_header)
                 decoded_sp['proposal']['header']['channelHeader'] = channel_header
-                self.tx_timestamp = channel_header.getTimestamp()
+                self.tx_timestamp = channel_header.timestamp
             except Exception as e:
-                raise Exception('Decoding ChannelHeader failed: ' + e)
+                raise Exception('Decoding ChannelHeader failed: ' + str(e))
 
             try:
-                ccpp = pb.ChaincodeProposalPayload.deserializeBinary(proposal_payload)
+                ccpp = pr_pb.ChaincodeProposalPayload.FromString(proposal.payload)
                 decoded_sp['proposal']['payload'] = ccpp
             except Exception as e:
-                raise Exception('Decoding ChaincodeProposalPayload failed: %s' + e)
+                raise Exception('Decoding ChaincodeProposalPayload failed: %s' + str(e))
 
-            self.signed_proposal = decoded_sp
+            self.signed_proposal_pb = decoded_sp
 
     def get_channel_id(self):
         """Get the channel ID of the chaincode calling transaction"""
@@ -97,29 +92,30 @@ class ChaincodeStub(ChaincodeStubInterface):
 
     async def get_state(self, key: str) -> bytearray:
         """Get asset state from ledger"""
-        print('get_state called with key:%s' % key)
+        LOGGER.info('get_state called with key:%s' % key)
         # Access public data by setting the collection to empty string
         collection = ''
         return await self.client.handle_get_state(collection, key, self.channel_id, self.txid)
 
     async def put_state(self, key: str, value):
         """Put asset state to ledger"""
-        print('put_state called with key:%s and value:%s' % (key, value))
+        LOGGER.info('put_state called with key:%s and value:%s' % (key, value))
         # Access public data by setting the collection to empty string
         collection = ''
         if isinstance(value, str):
-            value = bytes(value)
+            value = bytes(value.encode())
         return await self.client.handle_put_state(collection, key, value, self.channel_id, self.txid)
 
     async def delete_state(self, key: str):
         """Delete asset state from ledger"""
-        print('delete_state called with key:%s' % key)
+        LOGGER.info('delete_state called with key:%s' % key)
         # Access public data by setting the collection to empty string
         collection = ''
         return await self.client.handle_delete_state(collection, key, self.channel_id, self.txid)
 
     def create_composite_key(self, object_type, attributes):
-        """Creates a composite key by combining the objectType string and the given `attributes` to form a composite key"""
+        """Creates a composite key by combining the objectType string
+        and the given `attributes` to form a composite key"""
         validate_composite_key_attribute(object_type)
         if not isinstance(attributes, Sequence):
             raise Exception('attributes must be an array')
@@ -137,7 +133,7 @@ class ChaincodeStub(ChaincodeStubInterface):
             split_key = composite_key[1:].split(MIN_UNICODE_RUNE_VALUE)
             object_type = split_key[0]
             split_key.pop()
-            if len(split_key)  > 1:
+            if len(split_key) > 1:
                 split_key.pop(0)
                 attributes = split_key
-        return (object_type, attributes)
+        return object_type, attributes
