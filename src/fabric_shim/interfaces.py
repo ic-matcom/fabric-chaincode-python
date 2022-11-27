@@ -30,7 +30,7 @@ class ChaincodeStubInterface(ABC):
         pass
 
     @abstractmethod
-    def get_state(self, key: str) -> bytearray:
+    def get_state(self, key: str): #-> bytearray:
         """
             GetState returns the value of the specified `key` from the
             ledger. Note that GetState doesn't read data from the writeset, which

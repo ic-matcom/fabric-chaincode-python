@@ -88,7 +88,7 @@ class ChaincodeStub(ChaincodeStubInterface):
         """Get the ID of the chaincode calling transaction"""
         return self.tx_id
 
-    async def get_state(self, key: str) -> bytearray:
+    async def get_state(self, key: str): #-> bytearray:
         """Get asset state from ledger"""
         LOGGER.info('get_state called with key:%s' % key)
         # Access public data by setting the collection to empty string

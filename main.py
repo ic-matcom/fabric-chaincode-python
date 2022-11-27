@@ -31,7 +31,7 @@ class MyChaincode(Chaincode):
         if action == "InitLedger":
             await self.init_ledger(self, stub)
             return pb.Response(status=ResponseCode.OK)
-        if action == "CreateAsset":
+        if action == "CreateAsset" or action == "UpdateAsset":
             create_inputs = args[1:]
             new_asset = Asset(
                 create_inputs[0],
@@ -41,7 +41,7 @@ class MyChaincode(Chaincode):
                 create_inputs[4])
             await self.create_asset(self, stub, new_asset)
             return pb.Response(status=ResponseCode.OK)
-        if action == "ReadAsset" or action == "UpdateAsset":
+        if action == "ReadAsset":
             asset_id = args[1]
             result = await self.read_asset(self, stub, asset_id)
             return pb.Response(status=ResponseCode.OK, message=result)
