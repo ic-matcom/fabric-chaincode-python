@@ -12,8 +12,8 @@ cc_id: str = "basic_1.0:7e0e2d4591aaf7b2eceeaa6a2a09faa9665fd1e961fd92840a61018a
 
 
 class Asset:
-    def __init__(self, id, color, size, owner, appraised_value):
-        self.id: str = id
+    def __init__(self, id_, color, size, owner, appraised_value):
+        self.id: str = id_
         self.color: str = color
         self.size: int = size
         self.owner: str = owner
