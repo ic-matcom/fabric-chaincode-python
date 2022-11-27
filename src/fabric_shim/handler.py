@@ -15,7 +15,6 @@ import asyncio
 from typing import AsyncIterable
 
 import grpc
-from google.protobuf.message import DecodeError
 
 from fabric_protos_python.peer import chaincode_shim_pb2 as ccshim_pb2
 from fabric_protos_python.peer import chaincode_pb2 as cc_pb2
