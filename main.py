@@ -12,7 +12,7 @@ cc_id: str = "basic_1.0:7e0e2d4591aaf7b2eceeaa6a2a09faa9665fd1e961fd92840a61018a
 
 
 class Asset:
-    def __init__(self, id_ = None, color = None, size = None, owner = None, appraised_value = None):
+    def __init__(self, id_=None, color=None, size=None, owner=None, appraised_value=None):
         self.id: str = id_
         self.color: str = color
         self.size: int = size
@@ -30,9 +30,7 @@ class MyChaincode(Chaincode):
         if action == "InitLedger":
             await self.init_ledger(self, stub)
             return pb.Response(status=ResponseCode.OK)
-        if action == "CreateAsset" or action == "UpdateAsset":
-            create_inputs = args[1:]
-        elif action == "CreateAsset":
+        elif action == "CreateAsset" or action == "UpdateAsset":
             new_asset = Asset(
                 inputs[0],
                 inputs[1],
@@ -41,10 +39,7 @@ class MyChaincode(Chaincode):
                 inputs[4])
             await self.create_asset(self, stub, new_asset)
             return pb.Response(status=ResponseCode.OK)
-        if action == "ReadAsset":
-            asset_id = args[1]
-            result = await self.read_asset(self, stub, asset_id)
-        elif action == "ReadAsset" or action == "UpdateAsset":
+        elif action == "ReadAsset":
             asset_id = inputs[0]
             result: Asset = await self.read_asset(self, stub, asset_id)
             return pb.Response(status=ResponseCode.OK, message=result)
