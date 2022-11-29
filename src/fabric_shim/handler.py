@@ -207,8 +207,9 @@ class Handler:
             txid=tx_id,
             channel_id=channel_id
         )
-        print('handle_get_state - with key:' + key)
-        return await self.__ask_peer_and_listen(msg, 'GetState')
+
+        result = await self.__ask_peer_and_listen(msg, 'GetState')
+        return result.payload
     
     async def handle_put_state(self, collection, key, value, channel_id, tx_id):
         msg_pb = ccshim_pb2.PutState()

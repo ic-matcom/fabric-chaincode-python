@@ -3,9 +3,11 @@
 # SPDX-License-Identifier: Apache-2.0
 from src.fabric_shim.interfaces import ChaincodeStubInterface
 from src.fabric_shim.utils import *
+from fabric_protos_python.peer import chaincode_pb2 as pb
 from fabric_protos_python.common import common_pb2 as cm_pb
 from fabric_protos_python.peer import proposal_pb2 as pr_pb
 from fabric_protos_python.msp import identities_pb2 as id_pb
+from fabric_protos_python.peer import chaincode_event_pb2 as e_pb
 from collections.abc import Sequence
 from src.fabric_shim.logging import LOGGER
 
@@ -87,6 +89,14 @@ class ChaincodeStub(ChaincodeStubInterface):
     def get_txid(self):
         """Get the ID of the chaincode calling transaction"""
         return self.tx_id
+
+    def get_function_and_parameters(self):
+        """Get function name and parameters of the chaincode calling transaction"""
+        args = [arg.decode() for arg in self.cc_input.args]
+        function: str = args[0]
+        params = args[1:]
+
+        return function, params
 
     async def get_state(self, key: str): #-> bytearray:
         """Get asset state from ledger"""

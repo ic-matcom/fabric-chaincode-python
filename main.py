@@ -12,7 +12,7 @@ cc_id: str = "basic_1.0:7e0e2d4591aaf7b2eceeaa6a2a09faa9665fd1e961fd92840a61018a
 
 
 class Asset:
-    def __init__(self, id_, color, size, owner, appraised_value):
+    def __init__(self, id_ = None, color = None, size = None, owner = None, appraised_value = None):
         self.id: str = id_
         self.color: str = color
         self.size: int = size
@@ -26,31 +26,34 @@ class MyChaincode(Chaincode):
         return pb.Response(status=ResponseCode.OK)
 
     async def invoke(self, stub: ChaincodeStubInterface) -> pb.Response:
-        args = [arg.decode() for arg in stub.cc_input.args]
-        action = args[0]
+        action, inputs = stub.get_function_and_parameters()
         if action == "InitLedger":
             await self.init_ledger(self, stub)
             return pb.Response(status=ResponseCode.OK)
         if action == "CreateAsset" or action == "UpdateAsset":
             create_inputs = args[1:]
+        elif action == "CreateAsset":
             new_asset = Asset(
-                create_inputs[0],
-                create_inputs[1],
-                create_inputs[2],
-                create_inputs[3],
-                create_inputs[4])
+                inputs[0],
+                inputs[1],
+                inputs[2],
+                inputs[3],
+                inputs[4])
             await self.create_asset(self, stub, new_asset)
             return pb.Response(status=ResponseCode.OK)
         if action == "ReadAsset":
             asset_id = args[1]
             result = await self.read_asset(self, stub, asset_id)
+        elif action == "ReadAsset" or action == "UpdateAsset":
+            asset_id = inputs[0]
+            result: Asset = await self.read_asset(self, stub, asset_id)
             return pb.Response(status=ResponseCode.OK, message=result)
-        if action == "DeleteAsset":
-            asset_id = args[1]
+        elif action == "DeleteAsset":
+            asset_id = inputs[0]
             await self.delete_state(self, stub, asset_id)
             return pb.Response(status=ResponseCode.OK)
-
-        return pb.Response(status=ResponseCode.ERROR)
+        else:
+            return pb.Response(status=ResponseCode.ERROR)
 
     async def init_ledger(self, stub: ChaincodeStubInterface):
         init_ledger_values = [
@@ -65,7 +68,7 @@ class MyChaincode(Chaincode):
     async def create_asset(self, stub: ChaincodeStubInterface, asset: Asset):
         await stub.put_state(asset.id, json.dumps(asset.__dict__))
 
-    async def read_asset(self, stub: ChaincodeStubInterface, key: str):
+    async def read_asset(self, stub: ChaincodeStubInterface, key: str) -> Asset:
         return await stub.get_state(key)
 
     async def delete_state(self, stub: ChaincodeStubInterface, key: str):
