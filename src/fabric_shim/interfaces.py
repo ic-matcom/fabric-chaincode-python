@@ -30,7 +30,7 @@ class ChaincodeStubInterface(ABC):
         pass
 
     @abstractmethod
-    def get_state(self, key: str) -> bytearray:
+    def get_state(self, key: str): #-> bytearray:
         """
             GetState returns the value of the specified `key` from the
             ledger. Note that GetState doesn't read data from the writeset, which
@@ -39,10 +39,10 @@ class ChaincodeStubInterface(ABC):
             If the key does not exist in the state database, (nil, nil) is returned.
         """
 
-    def put_state(self):  # update the state of the specified key on the ledger
+    def put_state(self, key: str, value):  # update the state of the specified key on the ledger
         pass
 
-    def delete_state(self):  # delete the state of the specified key on the ledger
+    def delete_state(self, key: str):  # delete the state of the specified key on the ledger
         pass
 
     def set_state_validation_parameter(self):  # Set state validation parameters
@@ -120,7 +120,7 @@ class ChaincodeStubInterface(ABC):
 class Chaincode(ABC):
     @staticmethod
     @abstractmethod
-    def init(stub: ChaincodeStubInterface) -> pb.Response:
+    async def init(stub: ChaincodeStubInterface) -> pb.Response:
         """
         init is called during Instantiate transaction after the chaincode container has been established for the
         first time, allowing the chaincode to initialize its internal data
@@ -129,7 +129,7 @@ class Chaincode(ABC):
 
     @staticmethod
     @abstractmethod
-    def invoke(stub: ChaincodeStubInterface) -> pb.Response:
+    async def invoke(stub: ChaincodeStubInterface) -> pb.Response:
         """
         invoke is called to update or query the ledger in a proposal transaction. Updated state variables are not
         committed to the ledger until the transaction is committed.
