@@ -26,27 +26,25 @@ class MyChaincode(Chaincode):
         return pb.Response(status=ResponseCode.OK)
 
     async def invoke(self, stub: ChaincodeStubInterface) -> pb.Response:
-        args = [arg.decode() for arg in stub.cc_input.args]
-        action = args[0]
+        action, inputs = stub.get_function_and_parameters()
         if action == "InitLedger":
             await self.init_ledger(self, stub)
             return pb.Response(status=ResponseCode.OK)
         if action == "CreateAsset":
-            create_inputs = args[1:]
             new_asset = Asset(
-                create_inputs[0],
-                create_inputs[1],
-                create_inputs[2],
-                create_inputs[3],
-                create_inputs[4])
+                inputs[0],
+                inputs[1],
+                inputs[2],
+                inputs[3],
+                inputs[4])
             await self.create_asset(self, stub, new_asset)
             return pb.Response(status=ResponseCode.OK)
         if action == "ReadAsset" or action == "UpdateAsset":
-            asset_id = args[1]
+            asset_id = inputs[0]
             result = await self.read_asset(self, stub, asset_id)
-            return pb.Response(status=ResponseCode.OK, message=result)
+            return pb.Response(status=ResponseCode.OK, message=result.SerializeToString())
         if action == "DeleteAsset":
-            asset_id = args[1]
+            asset_id = inputs[0]
             await self.delete_state(self, stub, asset_id)
             return pb.Response(status=ResponseCode.OK)
 

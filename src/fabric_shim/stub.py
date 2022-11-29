@@ -90,6 +90,14 @@ class ChaincodeStub(ChaincodeStubInterface):
         """Get the ID of the chaincode calling transaction"""
         return self.txid
 
+    def get_function_and_parameters(self):
+        """Get function name and parameters of the chaincode calling transaction"""
+        args = [arg.decode() for arg in self.cc_input.args]
+        function: str = args[0]
+        params = args[1:]
+
+        return function, params
+
     async def get_state(self, key: str) -> bytearray:
         """Get asset state from ledger"""
         LOGGER.info('get_state called with key:%s' % key)
