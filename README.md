@@ -1,13 +1,18 @@
 # fabric-chaincode-python
 Hyperledger Fabric Contract and Chaincode implementation for Python https://wiki.hyperledger.org/display/fabric
 
-
-## Quick Testing
+## 🚀 Quick Testing
 
 This library has only been tested with python versions 3.8 and 3.9
+
+### Install dependencies
+Run the following instructions in terminal:
 ```bash
-python3 -m pip install fabric-protos-python==2.4
-python3 -m pip install grpcio
+cd fabric-chaincode-csharp/
+```
+
+```bash
+python3 -m pip install fabric-protos-python==2.4 grpcio
 ```
 
 ### Export the environment variables
@@ -22,7 +27,7 @@ Set the chaincode server address:
 export CHAINCODE_SERVER_ADDRESS=127.0.0.1:9999
 ```
 
-### And start the chaincode service:
+### Start chaincode service:
 ```bash
 python3 main.py 
 ```
