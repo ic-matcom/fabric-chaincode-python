@@ -1,6 +1,7 @@
 # this code is just a guide
+# To test the library use the chaincode inside the main.py
 
-import Shim  # Introduce fabric_shim
+# import Shim  # Introduce fabric_shim
 
 
 class TokenChaincode:  # Define chaincode
