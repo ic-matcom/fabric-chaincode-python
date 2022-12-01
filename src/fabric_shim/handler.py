@@ -11,9 +11,8 @@
 #      chat_with_peer(): Starts a two-way communication flow with the peer node
 
 import datetime
-import asyncio
 from typing import AsyncIterable
-
+import asyncio
 import grpc
 
 from fabric_protos_python.peer import chaincode_shim_pb2 as ccshim_pb2
