@@ -74,6 +74,9 @@ class ChaincodeStub(ChaincodeStubInterface):
 
             self.signed_proposal_pb = decoded_sp
 
+    def set_event(self, name, payload):
+        self.chaincode_event = e_pb.ChaincodeEvent(event_name=name, payload=payload)
+
     def get_channel_id(self):
         """Get the channel ID of the chaincode calling transaction"""
         return self.channel_id

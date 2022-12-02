@@ -26,6 +26,7 @@ class MyChaincode(Chaincode):
         return pb.Response(status=ResponseCode.OK)
 
     async def invoke(self, stub: ChaincodeStubInterface) -> pb.Response:
+        stub.set_event('name', bytes('payload'.encode()))
         action, inputs = stub.get_function_and_parameters()
         if action == "InitLedger":
             await self.init_ledger(self, stub)
@@ -72,7 +73,4 @@ class MyChaincode(Chaincode):
 
 if __name__ == '__main__':
     mycc = MyChaincode
-    start(cc_id, address_str, mycc)
-    # from fabric_protos_python.peer import transaction_pb2 as tx_pb2
-
-    # print("-->> ", tx_pb2.MetaDataKeys.VALIDATION_PARAMETER)
+    start(mycc, cc_id, address_str)

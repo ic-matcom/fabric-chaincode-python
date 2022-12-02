@@ -11,9 +11,8 @@
 #      chat_with_peer(): Starts a two-way communication flow with the peer node
 
 import datetime
-import asyncio
 from typing import AsyncIterable
-
+import asyncio
 import grpc
 
 from fabric_protos_python.peer import chaincode_shim_pb2 as ccshim_pb2
@@ -88,7 +87,8 @@ class Handler:
                 type=ccshim_pb2.ChaincodeMessage.COMPLETED,
                 payload=resp.SerializeToString(),
                 txid=msg.txid,
-                channel_id=msg.channel_id
+                channel_id=msg.channel_id,
+                chaincode_event=stub.chaincode_event
             )
         else:
             LOGGER.info('%s Calling chaincode %s() succeeded. Sending COMPLETED message back to peer'
@@ -98,7 +98,8 @@ class Handler:
                 type=ccshim_pb2.ChaincodeMessage.COMPLETED,
                 payload=resp.SerializeToString(),
                 txid=msg.txid,
-                channel_id=msg.channel_id
+                channel_id=msg.channel_id,
+                chaincode_event=stub.chaincode_event
             )
 
         await self.context.write(next_state_msg)
@@ -111,11 +112,9 @@ class Handler:
         elif msg.type == ccshim_pb2.ChaincodeMessage.INIT:
             LOGGER.info("+++ call INIT +++")
             await self.handle_stub_interaction(msg, "Init")
-            return
         elif msg.type == ccshim_pb2.ChaincodeMessage.TRANSACTION:
             LOGGER.info("+++ call INVOKE +++")
             await self.handle_stub_interaction(msg, "Invoke")
-            return
         else:
             self.context.write(new_error_msg(msg, STATE))
 
