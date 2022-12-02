@@ -56,14 +56,19 @@ def load_tls_config(key: bytes = None, cert: bytes = None, client_ca_certs: byte
 def _internal_server(**kwargs) -> grpc.aio.Server:
     server = grpc.aio.server()
 
-    key = kwargs.pop("key", os.getenv('CORE_TLS_CLIENT_KEY_PATH'))
-    cert = kwargs.pop("cert", os.getenv('CORE_TLS_CLIENT_CERT_PATH'))
+    key = kwargs.pop("key")
+    key = os.getenv('CORE_TLS_CLIENT_KEY_PATH', key)
+
+    cert = kwargs.pop("cert")
+    cert = os.getenv('CORE_TLS_CLIENT_CERT_PATH', cert)
+
     address = kwargs.get("address")
 
     if not key or not cert:
         port = server.add_insecure_port(address)
     else:
-        client_ca_certs = kwargs.pop("client_ca_certs", os.getenv('CORE_PEER_TLS_ROOTCERT_FILE'))
+        client_ca_certs = kwargs.pop("client_ca_certs")
+        client_ca_certs = os.getenv('CORE_PEER_TLS_ROOTCERT_FILE', client_ca_certs)
         server_credentials = load_tls_config(key, cert, client_ca_certs)
         # Pass down credentials
         port = server.add_secure_port(address, server_credentials)
