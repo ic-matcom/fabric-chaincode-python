@@ -7,10 +7,10 @@ from src.fabric_shim.response import ResponseCode
 import json
 from fabric_protos_python.peer import proposal_response_pb2 as pb
 
-HOST = '127.0.0.1'
-PORT = 9999
-address_str: str = f"{HOST}:{PORT}"
-cc_id: str = "basic_1.0:6f953644cba819469faf754a24e6a839b3065703a0e55d559e419de3c6361a9d"
+# HOST = '127.0.0.1'
+# PORT = 9999
+# address_str: str = f"{HOST}:{PORT}"
+# cc_id: str = "basic_1.0:6f953644cba819469faf754a24e6a839b3065703a0e55d559e419de3c6361a9d"
 
 
 class Asset:
@@ -74,4 +74,4 @@ class MyChaincode(Chaincode):
 
 if __name__ == '__main__':
     mycc = MyChaincode
-    start(mycc, cc_id, address_str)
+    start(mycc)

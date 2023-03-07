@@ -12,7 +12,7 @@ cd fabric-chaincode-csharp/
 ```
 
 ```bash
-python3 -m pip install fabric-protos-python==2.4 grpcio
+python -m pip install fabric-protos-python==2.4 grpcio
 ```
 
 ### Export the environment variables
@@ -29,5 +29,5 @@ export CHAINCODE_SERVER_ADDRESS=127.0.0.1:9999
 
 ### Start chaincode service:
 ```bash
-python3 main.py 
+python main.py 
 ```
