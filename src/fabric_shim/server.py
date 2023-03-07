@@ -5,7 +5,7 @@ import asyncio
 import logging
 import os
 
-from typing import AsyncIterable, Iterable
+from typing import AsyncIterable, Iterable, Type
 
 import grpc
 import queue
@@ -90,7 +90,12 @@ async def _internal_start(server: grpc.aio.Server) -> None:
     await server.wait_for_termination()
 
 
-def start(cc: Chaincode, cc_id: str = None, address: str = None, key: bytes = None, cert: bytes = None, client_ca_certs: bytes = None):
+def start(cc: Type[Chaincode],
+          cc_id: str = None,
+          address: str = None,
+          key: bytes = None,
+          cert: bytes = None,
+          client_ca_certs: bytes = None):
     """
     start the server
 

@@ -1,3 +1,5 @@
+from ctypes import c_char
+
 from src.fabric_shim.interfaces import Chaincode, ChaincodeStubInterface
 from src.fabric_shim.server import start
 from src.fabric_shim.response import ResponseCode
@@ -72,4 +74,4 @@ class MyChaincode(Chaincode):
 
 if __name__ == '__main__':
     mycc = MyChaincode
-    start(cc_id, address_str, mycc)
+    start(mycc, cc_id, address_str)
