@@ -8,7 +8,7 @@ from fabric_protos_python.peer import proposal_response_pb2 as pb
 HOST = '127.0.0.1'
 PORT = 9999
 address_str: str = f"{HOST}:{PORT}"
-cc_id: str = "basic_1.0:7e0e2d4591aaf7b2eceeaa6a2a09faa9665fd1e961fd92840a61018a91d0d0b2"
+cc_id: str = "basic_1.0:6f953644cba819469faf754a24e6a839b3065703a0e55d559e419de3c6361a9d"
 
 
 class Asset:
